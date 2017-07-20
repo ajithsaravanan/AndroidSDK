@@ -2,9 +2,6 @@ package instamojo.library.API;
 
 import android.os.AsyncTask;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 
 import instamojo.library.Callback;
@@ -19,18 +16,22 @@ public class OrdernAuth {
 
     }
 
-    public void post(String url, String amount, Callback callback) {
-        OrdernAuthasynch authasynch = new OrdernAuthasynch(url, amount, callback);
+    public void post(String url, String email, String phone, String name, String amount, String purpose, Callback callback) {
+        OrdernAuthasynch authasynch = new OrdernAuthasynch(url, email, phone, name, amount, purpose, callback);
         authasynch.execute();
     }
 
     private class OrdernAuthasynch extends AsyncTask<Void, Void, String> {
         Callback callback;
 
-        String url, amount;
+        String url, amount, email, phone, purpose, name;
 
-        public OrdernAuthasynch(String url, String amount, Callback callback) {
+        public OrdernAuthasynch(String url, String email, String phone, String name, String amount, String purpose, Callback callback) {
             this.callback = callback;
+            this.email = email;
+            this.phone = phone;
+            this.name = name;
+            this.purpose = purpose;
             this.amount = amount;
             this.url = url;
         }
@@ -38,19 +39,15 @@ public class OrdernAuth {
         @Override
         protected String doInBackground(Void... params) {
             Post post = new Post();
-            JSONObject jsonObject = new JSONObject();
+
             String response = null;
+
             try {
-                jsonObject.put("txnId", amount);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            try {
-                response = post.postdata(url, jsonObject.toString());
+                response = post.postOrdernAuth(url, name, email, phone, purpose, amount);
             } catch (IOException e) {
                 e.printStackTrace();
-                callback.onResponse("Internet unavailable or server down");
             }
+
             return response;
         }
 

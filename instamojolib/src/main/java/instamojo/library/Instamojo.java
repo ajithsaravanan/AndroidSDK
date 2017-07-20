@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.instamojo.android.activities.PaymentDetailsActivity;
 import com.instamojo.android.callbacks.OrderRequestCallBack;
 import com.instamojo.android.helpers.Constants;
+import com.instamojo.android.models.Errors;
 import com.instamojo.android.models.Order;
 import com.instamojo.android.network.Request;
 
@@ -19,11 +20,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import instamojo.library.API.OrdernAuth;
+import instamojo.library.API.TxnVerify;
 
 public class Instamojo extends AppCompatActivity {
 
     String ordernauth_url, txnid_url, webhook,
-            amountstr, email, mobile, buyer, description;
+            amountstr, email, phone, name, description, purpose;
 
     ApplicationInfo app;
 
@@ -34,6 +36,10 @@ public class Instamojo extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        com.instamojo.android.Instamojo.initialize(this);
+
+        com.instamojo.android.Instamojo.setBaseUrl("https://test.instamojo.com/");
 
         app = null;
 
@@ -49,12 +55,28 @@ public class Instamojo extends AppCompatActivity {
 
         amountstr = getIntent().getStringExtra("amount");
 
+        purpose = getIntent().getStringExtra("purpose");
+
+        email = getIntent().getStringExtra("email");
+
+        phone = getIntent().getStringExtra("phone");
+
+        name = getIntent().getStringExtra("name");
+
+        purpose = getIntent().getStringExtra("purpose");
+
+        description = getIntent().getStringExtra("description");
+
         ordernauth_url = bundle.getString(Config.ORDER_AUTHURL);
 
-        txnid_url = bundle.getString(Config.TXNID_URL);
+        checkValidation();
 
-        webhook = bundle.getString(Config.WEBHOOK);
+        getOrdernAuth();
 
+        setContentView(R.layout.activity_instamojo);
+    }
+
+    private void checkValidation() {
         if (TextUtils.isEmpty(ordernauth_url)) {
             Toast.makeText(getApplicationContext(), "Invalid Order URL", Toast.LENGTH_LONG)
                     .show();
@@ -73,15 +95,17 @@ public class Instamojo extends AppCompatActivity {
             return;
         }
 
-        getOrdernAuth();
-
-        setContentView(R.layout.activity_instamojo);
+        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(phone)) {
+            Toast.makeText(getApplicationContext(), "Invalid Email or Phone", Toast.LENGTH_LONG)
+                    .show();
+            return;
+        }
     }
 
 
     private void getOrdernAuth() {
         OrdernAuth ordernAuth = new OrdernAuth();
-        ordernAuth.post(ordernauth_url, amountstr, new Callback() {
+        ordernAuth.post(ordernauth_url, email, phone, name, amountstr, purpose, new Callback() {
             @Override
             public void onResponse(String response) {
                 dismissDialogue();
@@ -89,9 +113,10 @@ public class Instamojo extends AppCompatActivity {
                 String authToken = null, orderId = null, transactionId = null;
                 try {
                     jsonObject = new JSONObject(response);
-                    authToken = jsonObject.getString("auth");
-                    orderId = jsonObject.getString("orderId");
-                    transactionId = jsonObject.getString("txnId");
+                    authToken = jsonObject.getString("token");
+                    JSONObject orderJson = jsonObject.getJSONObject("order");
+                    orderId = orderJson.getString("order_id");
+                    transactionId = jsonObject.getString("transaction_id");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -102,27 +127,36 @@ public class Instamojo extends AppCompatActivity {
     }
 
     private void createOrder(String accessToken, String orderId, String transactionId) {
-        Order order = new Order(accessToken, transactionId, buyer, email, mobile, amountstr, description);
-        validateOrder(order);
+//        Order order = new Order(accessToken, transactionId, name, email, phone, amountstr, purpose);
+//        order.setId(orderId);
+//        startprecreatedUI(order);
 
-        if (!TextUtils.isEmpty(webhook)) {
-            order.setWebhook(webhook);
-        }
-
-        Request request = new Request(order, new OrderRequestCallBack(){
-
+        Request request = new Request(accessToken, orderId, new OrderRequestCallBack() {
             @Override
-            public void onFinish(Order order, Exception e) {
-                if (e!= null) {
-                endActivity(Config.FAILED, "Error Occured");
-                }
-                else {
-                    startprecreatedUI(order);
-                }
+            public void onFinish(final Order order, final Exception error) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (error != null) {
+                            if (error instanceof Errors.ConnectionError) {
+                                endActivity(Config.FAILED, "No internet connection");
+                            } else if (error instanceof Errors.ServerError) {
+                                endActivity(Config.FAILED, "Server Error. Try again");
+                            } else if (error instanceof Errors.AuthenticationError) {
+                                endActivity(Config.FAILED, "Access token is invalid or expired. Please Update the token!!");
+                            } else {
+                                endActivity(Config.FAILED, error.toString());
+                            }
+                            return;
+                        }
 
+                        startprecreatedUI(order);
+                    }
+                });
 
             }
         });
+        request.execute();
     }
 
     private void validateOrder(Order order) {
@@ -189,14 +223,36 @@ public class Instamojo extends AppCompatActivity {
             String transactionID = data.getStringExtra(Constants.TRANSACTION_ID);
             String paymentID = data.getStringExtra(Constants.PAYMENT_ID);
 
-            // Check transactionID, orderID, and orderID for null before using them to check the Payment status.
             if (orderID != null && transactionID != null && paymentID != null) {
-                String message = "orderId=" + orderID + ":txnId=" + transactionID + ":paymentId=" + paymentID;
-                endActivity(Config.SUCCESS, message);
+                postTxnverify(transactionID, orderID, paymentID);
             } else {
                 endActivity(Config.FAILED, "Payment was cancelled");
             }
         }
+    }
+
+    private void postTxnverify(final String txnid, final String orderId, final String paymentId) {
+        TxnVerify txnVerify = new TxnVerify();
+        txnVerify.post(ordernauth_url, txnid, orderId, paymentId, new Callback() {
+            @Override
+            public void onResponse(String response) {
+                JSONObject jsonObject = null;
+                String status = null;
+                try {
+                    jsonObject = new JSONObject(response);
+                    status = jsonObject.getString("status");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                String message = "status=" + status + ":orderId=" + orderId + ":txnId=" + txnid + ":paymentId=" + paymentId;
+                if (TextUtils.equals(status, "success")) {
+                    endActivity(Config.SUCCESS, message);
+                }
+                else {
+                    endActivity(Config.FAILED, message);
+                }
+            }
+        });
     }
 
     private void endActivity(int resultCode, String message) {

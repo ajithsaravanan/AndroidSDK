@@ -2,9 +2,6 @@ package instamojo.library.API;
 
 import android.os.AsyncTask;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 
 import instamojo.library.Callback;
@@ -16,37 +13,36 @@ import instamojo.library.REST.Post;
 
 public class TxnVerify {
 
-    public void post(String url, String txnid) {
-
+    public void post(String url, String txnid, String orderId, String paymentID, Callback callback) {
+        TxnVerifyasync txnVerifyasync = new TxnVerifyasync(url, txnid, orderId, paymentID, callback);
+        txnVerifyasync.execute();
     }
 
     private class TxnVerifyasync extends AsyncTask<Void, Void, String> {
         Callback callback;
 
-        String url, txnId;
+        String url, txnId, orderId, paymentId;
 
-        public TxnVerifyasync(String url, String txnId, Callback callback) {
+        public TxnVerifyasync(String url, String txnid, String orderId, String paymentID, Callback callback) {
             this.callback = callback;
-            this.txnId = txnId;
+            this.txnId = txnid;
+            this.orderId = orderId;
+            this.paymentId = paymentID;
             this.url = url;
         }
 
         @Override
         protected String doInBackground(Void... params) {
             Post post = new Post();
-            JSONObject jsonObject = new JSONObject();
+
             String response = null;
+
             try {
-                jsonObject.put("txnId", txnId);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            try {
-                response = post.postdata(url, jsonObject.toString());
+                response = post.postTxnVerify(url, txnId, orderId, paymentId);
             } catch (IOException e) {
                 e.printStackTrace();
-                callback.onResponse("Internet unavailable or server down");
             }
+
             return response;
         }
 

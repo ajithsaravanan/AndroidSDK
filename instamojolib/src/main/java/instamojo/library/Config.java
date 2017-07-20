@@ -10,4 +10,5 @@ public class Config {
     public final static String WEBHOOK = "instamojo.webhook";
     public final static int SUCCESS = 10;
     public final static int FAILED = 20;
+    public final static int INSTAMOJO = 30;
 }
