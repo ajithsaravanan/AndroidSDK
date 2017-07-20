@@ -1,1 +1,1 @@
-include ':instamojolib'
+include ':instamojolib', ':testapp'
