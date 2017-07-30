@@ -24,7 +24,7 @@ import instamojo.library.API.TxnVerify;
 
 public class Instamojo extends AppCompatActivity {
 
-    String ordernauth_url, txnid_url, webhook,
+    String ordernauth_url,
             amountstr, email, phone, name, description, purpose;
 
     ApplicationInfo app;
@@ -79,12 +79,6 @@ public class Instamojo extends AppCompatActivity {
     private void checkValidation() {
         if (TextUtils.isEmpty(ordernauth_url)) {
             Toast.makeText(getApplicationContext(), "Invalid Order URL", Toast.LENGTH_LONG)
-                    .show();
-            return;
-        }
-
-        if (TextUtils.isEmpty(txnid_url)) {
-            Toast.makeText(getApplicationContext(), "Invalid Transaction URL", Toast.LENGTH_LONG)
                     .show();
             return;
         }
