@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.widget.Toast;
 
 import com.instamojo.android.activities.PaymentDetailsActivity;
 import com.instamojo.android.callbacks.OrderRequestCallBack;
@@ -39,8 +38,6 @@ public class Instamojo extends AppCompatActivity {
 
         com.instamojo.android.Instamojo.initialize(this);
 
-        com.instamojo.android.Instamojo.setBaseUrl("https://test.instamojo.com/");
-
         app = null;
 
         dialog = new ProgressDialog(Instamojo.this);
@@ -67,7 +64,11 @@ public class Instamojo extends AppCompatActivity {
 
         description = getIntent().getStringExtra("description");
 
+        String env = getIntent().getStringExtra("env");
+
         ordernauth_url = bundle.getString(Config.ORDER_AUTHURL);
+
+        checkEnvironment(env);
 
         checkValidation();
 
@@ -76,23 +77,31 @@ public class Instamojo extends AppCompatActivity {
         setContentView(R.layout.activity_instamojo);
     }
 
+    private void checkEnvironment(String env) {
+        if (TextUtils.equals(env, Config.TEST)) {
+            com.instamojo.android.Instamojo.setBaseUrl("https://test.instamojo.com/");
+        }
+
+        else if (TextUtils.equals(env, Config.PROD)) {
+            com.instamojo.android.Instamojo.setBaseUrl("https://api.instamojo.com/");
+        }
+
+        else {
+            endActivity(Config.FAILED, "Invalid Environment");
+        }
+    }
+
     private void checkValidation() {
         if (TextUtils.isEmpty(ordernauth_url)) {
-            Toast.makeText(getApplicationContext(), "Invalid Order URL", Toast.LENGTH_LONG)
-                    .show();
-            return;
+            endActivity(Config.FAILED, "Invalid Order URL");
         }
 
         if (TextUtils.isEmpty(amountstr)) {
-            Toast.makeText(getApplicationContext(), "Invalid Amount", Toast.LENGTH_LONG)
-                    .show();
-            return;
+            endActivity(Config.FAILED, "Invalid Amount");
         }
 
         if (TextUtils.isEmpty(email) || TextUtils.isEmpty(phone)) {
-            Toast.makeText(getApplicationContext(), "Invalid Email or Phone", Toast.LENGTH_LONG)
-                    .show();
-            return;
+            endActivity(Config.FAILED, "Invalid Email or Phone");
         }
     }
 
@@ -114,16 +123,13 @@ public class Instamojo extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                createOrder(authToken, orderId, transactionId);
+                createOrder(authToken, orderId);
             }
         });
         showDialogue("Fetching order details");
     }
 
-    private void createOrder(String accessToken, String orderId, String transactionId) {
-//        Order order = new Order(accessToken, transactionId, name, email, phone, amountstr, purpose);
-//        order.setId(orderId);
-//        startprecreatedUI(order);
+    private void createOrder(String accessToken, String orderId) {
 
         Request request = new Request(accessToken, orderId, new OrderRequestCallBack() {
             @Override
@@ -143,7 +149,6 @@ public class Instamojo extends AppCompatActivity {
                             }
                             return;
                         }
-
                         startprecreatedUI(order);
                     }
                 });
@@ -151,45 +156,6 @@ public class Instamojo extends AppCompatActivity {
             }
         });
         request.execute();
-    }
-
-    private void validateOrder(Order order) {
-        if (!order.isValid()){
-
-            if (!order.isValidName()){
-                endActivity(Config.FAILED, "Buyer name is invalid");
-            }
-
-            if (!order.isValidEmail()){
-                endActivity(Config.FAILED, "Buyer email is invalid");
-            }
-
-            if (!order.isValidPhone()){
-                endActivity(Config.FAILED, "Buyer phone is invalid");
-            }
-
-            if (!order.isValidAmount()){
-                endActivity(Config.FAILED, "Amount is invalid");
-            }
-
-            if (!order.isValidDescription()){
-                endActivity(Config.FAILED, "description is invalid");
-            }
-
-            if (!order.isValidTransactionID()){
-                endActivity(Config.FAILED, "Transaction ID is invalid");
-            }
-
-            if (!order.isValidRedirectURL()){
-                endActivity(Config.FAILED, "Redirection URL is invalid");
-            }
-
-            if (!order.isValidWebhook()) {
-                endActivity(Config.FAILED, "Webhook URL is invalid");
-            }
-
-        }
-
     }
 
     private void startprecreatedUI(Order order) {

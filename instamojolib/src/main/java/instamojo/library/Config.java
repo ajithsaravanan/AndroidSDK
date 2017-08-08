@@ -5,10 +5,10 @@ package instamojo.library;
  */
 
 public class Config {
-    public final static String TXNID_URL = "instamojo.txnid.url";
     public final static String ORDER_AUTHURL = "instamojo.orderauth.url";
-    public final static String WEBHOOK = "instamojo.webhook";
     public final static int SUCCESS = 10;
     public final static int FAILED = 20;
     public final static int INSTAMOJO = 30;
+    public final static String TEST = "test";
+    public final static String PROD = "prod";
 }

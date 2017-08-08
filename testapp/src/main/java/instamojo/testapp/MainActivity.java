@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("purpose", purpose);
         intent.putExtra("amount", amount);
         intent.putExtra("name", buyername);
+        intent.putExtra("env", Config.TEST); /*Change this to Config.PROD when you are ready*/
         startActivityForResult(intent, Config.INSTAMOJO);
     }
 
