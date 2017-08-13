@@ -19,7 +19,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import instamojo.library.API.OrdernAuth;
-import instamojo.library.API.TxnVerify;
 
 public class Instamojo extends AppCompatActivity {
 
@@ -70,9 +69,9 @@ public class Instamojo extends AppCompatActivity {
 
         checkEnvironment(env);
 
-        checkValidation();
-
-        getOrdernAuth();
+        if (checkValidation()) {
+            getOrdernAuth();
+        }
 
         setContentView(R.layout.activity_instamojo);
     }
@@ -91,18 +90,29 @@ public class Instamojo extends AppCompatActivity {
         }
     }
 
-    private void checkValidation() {
+    private boolean checkValidation() {
         if (TextUtils.isEmpty(ordernauth_url)) {
             endActivity(Config.FAILED, "Invalid Order URL");
+            return false;
         }
 
         if (TextUtils.isEmpty(amountstr)) {
             endActivity(Config.FAILED, "Invalid Amount");
+            return false;
         }
 
-        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(phone)) {
-            endActivity(Config.FAILED, "Invalid Email or Phone");
+        if (!Config.isValidMail(email)) {
+            endActivity(Config.FAILED, "Invalid Email");
+            return false;
         }
+
+        if (!Config.isValidMobile(phone)) {
+            endActivity(Config.FAILED, "Invalid Mobile");
+            return false;
+        }
+
+        return true;
+
     }
 
 
@@ -137,6 +147,7 @@ public class Instamojo extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        dismissDialogue();
                         if (error != null) {
                             if (error instanceof Errors.ConnectionError) {
                                 endActivity(Config.FAILED, "No internet connection");
@@ -155,6 +166,7 @@ public class Instamojo extends AppCompatActivity {
 
             }
         });
+        showDialogue("Creating Payment Request");
         request.execute();
     }
 
@@ -183,36 +195,16 @@ public class Instamojo extends AppCompatActivity {
             String transactionID = data.getStringExtra(Constants.TRANSACTION_ID);
             String paymentID = data.getStringExtra(Constants.PAYMENT_ID);
 
+            String status = "success";
+
+            String message = "status=" + status + ":orderId=" + orderID + ":txnId=" + transactionID + ":paymentId=" + paymentID;
+
             if (orderID != null && transactionID != null && paymentID != null) {
-                postTxnverify(transactionID, orderID, paymentID);
+                endActivity(Config.SUCCESS, message);
             } else {
                 endActivity(Config.FAILED, "Payment was cancelled");
             }
         }
-    }
-
-    private void postTxnverify(final String txnid, final String orderId, final String paymentId) {
-        TxnVerify txnVerify = new TxnVerify();
-        txnVerify.post(ordernauth_url, txnid, orderId, paymentId, new Callback() {
-            @Override
-            public void onResponse(String response) {
-                JSONObject jsonObject = null;
-                String status = null;
-                try {
-                    jsonObject = new JSONObject(response);
-                    status = jsonObject.getString("status");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                String message = "status=" + status + ":orderId=" + orderId + ":txnId=" + txnid + ":paymentId=" + paymentId;
-                if (TextUtils.equals(status, "success")) {
-                    endActivity(Config.SUCCESS, message);
-                }
-                else {
-                    endActivity(Config.FAILED, message);
-                }
-            }
-        });
     }
 
     private void endActivity(int resultCode, String message) {
