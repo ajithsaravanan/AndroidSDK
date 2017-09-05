@@ -96,8 +96,8 @@ public class Instamojo extends AppCompatActivity {
             return false;
         }
 
-        if (TextUtils.isEmpty(amountstr)) {
-            endActivity(Config.FAILED, "Invalid Amount");
+        if (!Config.isValidAmount(amountstr)) {
+            endActivity(Config.FAILED, "Invalid Amount - Amount needs to be greater than Rs. 10");
             return false;
         }
 
@@ -108,6 +108,16 @@ public class Instamojo extends AppCompatActivity {
 
         if (!Config.isValidMobile(phone)) {
             endActivity(Config.FAILED, "Invalid Mobile");
+            return false;
+        }
+
+        if (TextUtils.isEmpty(name)) {
+            endActivity(Config.FAILED, "Invalid Name");
+            return false;
+        }
+
+        if (TextUtils.isEmpty(purpose)) {
+            endActivity(Config.FAILED, "Invalid Purpose");
             return false;
         }
 
@@ -214,5 +224,6 @@ public class Instamojo extends AppCompatActivity {
         Instamojo.this.finish();
         return;
     }
+
 
 }

@@ -23,4 +23,12 @@ public class Config {
             return android.util.Patterns.PHONE.matcher(phone).matches();
         }
     }
+
+    public static boolean isValidAmount(String amount) {
+        try {
+            return (Double.valueOf(amount) >= 10);
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
