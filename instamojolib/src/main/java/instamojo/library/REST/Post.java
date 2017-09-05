@@ -21,7 +21,7 @@ public class Post {
 
         Request request = new Request.Builder()
                 .url(url + "?action=new_transaction&name=" + name + "&email=" + email + "&phone=" + phone + "&amount=" + amount
-                + "&purpose=" + purpose)
+                + "&purpose=" + purpose + "&client_type=Android")
                 .build();
 
         Response response = client.newCall(request).execute();
