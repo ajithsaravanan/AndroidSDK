@@ -67,6 +67,12 @@ public class Instamojo extends AppCompatActivity {
 
         ordernauth_url = bundle.getString(Config.ORDER_AUTHURL);
 
+//        Intent intent = new Intent();
+//        intent.setAction("ai.devsupport.instamojo");
+//        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+//        sendBroadcast(intent);
+//        endActivity();
+
         checkEnvironment(env);
 
         if (checkValidation()) {
@@ -86,38 +92,45 @@ public class Instamojo extends AppCompatActivity {
         }
 
         else {
-            endActivity(Config.FAILED, "Invalid Environment");
+            fireBroadcast(Config.FAILED, "Invalid Environment");
+            endActivity();
         }
     }
 
     private boolean checkValidation() {
         if (TextUtils.isEmpty(ordernauth_url)) {
-            endActivity(Config.FAILED, "Invalid Order URL");
+            fireBroadcast(Config.FAILED, "Invalid Order URL");
+            endActivity();
             return false;
         }
 
         if (!Config.isValidAmount(amountstr)) {
-            endActivity(Config.FAILED, "Invalid Amount - Amount needs to be greater than Rs. 10");
+            fireBroadcast(Config.FAILED, "Invalid Amount - Amount needs to be greater than Rs. 10");
+            endActivity();
             return false;
         }
 
         if (!Config.isValidMail(email)) {
-            endActivity(Config.FAILED, "Invalid Email");
+            fireBroadcast(Config.FAILED, "Invalid Email");
+            endActivity();
             return false;
         }
 
         if (!Config.isValidMobile(phone)) {
-            endActivity(Config.FAILED, "Invalid Mobile");
+            fireBroadcast(Config.FAILED, "Invalid Mobile");
+            endActivity();
             return false;
         }
 
         if (TextUtils.isEmpty(name)) {
-            endActivity(Config.FAILED, "Invalid Name");
+            fireBroadcast(Config.FAILED, "Invalid Name");
+            endActivity();
             return false;
         }
 
         if (TextUtils.isEmpty(purpose)) {
-            endActivity(Config.FAILED, "Invalid Purpose");
+            fireBroadcast(Config.FAILED, "Invalid Purpose");
+            endActivity();
             return false;
         }
 
@@ -160,13 +173,17 @@ public class Instamojo extends AppCompatActivity {
                         dismissDialogue();
                         if (error != null) {
                             if (error instanceof Errors.ConnectionError) {
-                                endActivity(Config.FAILED, "No internet connection");
+                                fireBroadcast(Config.FAILED, "No internet connection");
+                                endActivity();
                             } else if (error instanceof Errors.ServerError) {
-                                endActivity(Config.FAILED, "Server Error. Try again");
+                                fireBroadcast(Config.FAILED, "Server Error. Try again");
+                                endActivity();
                             } else if (error instanceof Errors.AuthenticationError) {
-                                endActivity(Config.FAILED, "Access token is invalid or expired. Please Update the token!!");
+                                fireBroadcast(Config.FAILED, "Check if you are using correct environment/credentials combo");
+                                endActivity();
                             } else {
-                                endActivity(Config.FAILED, error.toString());
+                                fireBroadcast(Config.FAILED, error.toString());
+                                endActivity();
                             }
                             return;
                         }
@@ -210,19 +227,25 @@ public class Instamojo extends AppCompatActivity {
             String message = "status=" + status + ":orderId=" + orderID + ":txnId=" + transactionID + ":paymentId=" + paymentID;
 
             if (orderID != null && transactionID != null && paymentID != null) {
-                endActivity(Config.SUCCESS, message);
+                fireBroadcast(Config.SUCCESS, message);
             } else {
-                endActivity(Config.FAILED, "Payment was cancelled");
+                fireBroadcast(Config.FAILED, "Payment was cancelled");
             }
+            endActivity();
         }
     }
 
-    private void endActivity(int resultCode, String message) {
-        Intent data = new Intent();
-        data.putExtra("response", message);
-        setResult(resultCode, data);
+    private void fireBroadcast(int code, String message) {
+        Intent intent = new Intent();
+        intent.setAction("ai.devsupport.instamojo");
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        intent.putExtra("code", code);
+        intent.putExtra("response", message);
+        sendBroadcast(intent);
+    }
+
+    private void endActivity() {
         Instamojo.this.finish();
-        return;
     }
 
 
