@@ -1,17 +1,24 @@
 package instamojo.testapp;
 
-import android.content.Intent;
+import android.app.Activity;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import instamojo.library.Config;
-import instamojo.library.Instamojo;
+import instamojo.library.InstamojoPay;
+import instamojo.library.InstapayListener;
 
 public class MainActivity extends AppCompatActivity {
     Button pay;
+    InstapayListener listener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,47 +30,50 @@ public class MainActivity extends AppCompatActivity {
         pay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = "tester@gmail.com";
-                String phone = "7875432991";
+                String email = "nd.dhokia@gmail.com";
+                String phone = "9033630540";
                 String amount = "10";
                 String purpose = "official";
                 String buyername = "tester";
-
-                callInstamojo(email, phone, amount, purpose, buyername);
+                callInstamojoPay(email, phone, amount, purpose, buyername);
             }
         });
     }
 
-    private void callInstamojo(String email, String phone, String amount, String purpose, String buyername) {
-        Intent intent = new Intent(MainActivity.this, Instamojo.class);
-        intent.putExtra("email", email);
-        intent.putExtra("phone", phone);
-        intent.putExtra("purpose", purpose);
-        intent.putExtra("amount", amount);
-        intent.putExtra("name", buyername);
-        intent.putExtra("env", Config.TEST); /*Change this to Config.PROD when you are ready*/
-        startActivityForResult(intent, Config.INSTAMOJO);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case Config.INSTAMOJO:
-                switch (resultCode) {
-                    case Config.SUCCESS:
-                        Toast.makeText(getApplicationContext(), data.getStringExtra("response"), Toast.LENGTH_LONG)
-                                .show();
-                        break;
-                    case Config.FAILED:
-                        Toast.makeText(getApplicationContext(), data.getStringExtra("response"), Toast.LENGTH_LONG)
-                                .show();
-                        break;
-                    default:
-                        break;
-                }
-
-            default:
-                break;
+    private void callInstamojoPay(String email, String phone, String amount, String purpose, String buyername) {
+        final Activity activity = this;
+        InstamojoPay instamojoPay = new InstamojoPay();
+        IntentFilter filter = new IntentFilter("ai.devsupport.instamojo");
+        registerReceiver(instamojoPay, filter);
+        JSONObject pay = new JSONObject();
+        try {
+            pay.put("email", email);
+            pay.put("phone", phone);
+            pay.put("purpose", purpose);
+            pay.put("amount", amount);
+            pay.put("name", buyername);
+            pay.put("env", Config.PROD);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        initListener();
+        instamojoPay.start(activity, pay, listener);
     }
+
+    private void initListener() {
+        listener = new InstapayListener() {
+            @Override
+            public void onSuccess(String response) {
+                Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG)
+                        .show();
+            }
+
+            @Override
+            public void onFailure(int code, String reason) {
+                Toast.makeText(getApplicationContext(), "Failed: " + reason, Toast.LENGTH_LONG)
+                        .show();
+            }
+        };
+    }
+
 }
