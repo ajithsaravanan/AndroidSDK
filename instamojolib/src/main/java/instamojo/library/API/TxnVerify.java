@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import java.io.IOException;
 
 import instamojo.library.Callback;
-import instamojo.library.REST.Post;
+import instamojo.library.REST.GET;
 
 /**
  * Created by shardullavekar on 18/07/17.
@@ -13,32 +13,31 @@ import instamojo.library.REST.Post;
 
 public class TxnVerify {
 
-    public void post(String url, String txnid, String orderId, String paymentID, Callback callback) {
-        TxnVerifyasync txnVerifyasync = new TxnVerifyasync(url, txnid, orderId, paymentID, callback);
+    public void get(String url, String token, String paymentID, Callback callback) {
+        TxnVerifyasync txnVerifyasync = new TxnVerifyasync(url, token, paymentID, callback);
         txnVerifyasync.execute();
     }
 
     private class TxnVerifyasync extends AsyncTask<Void, Void, String> {
         Callback callback;
 
-        String url, txnId, orderId, paymentId;
+        String url, paymentId, token;
 
-        public TxnVerifyasync(String url, String txnid, String orderId, String paymentID, Callback callback) {
+        public TxnVerifyasync(String url, String token, String paymentID, Callback callback) {
             this.callback = callback;
-            this.txnId = txnid;
-            this.orderId = orderId;
             this.paymentId = paymentID;
             this.url = url;
+            this.token = token;
         }
 
         @Override
         protected String doInBackground(Void... params) {
-            Post post = new Post();
+            GET get = new GET();
 
             String response = null;
 
             try {
-                response = post.postTxnVerify(url, txnId, orderId, paymentId);
+                response = get.getStatus(url + paymentId, token);
             } catch (IOException e) {
                 e.printStackTrace();
             }

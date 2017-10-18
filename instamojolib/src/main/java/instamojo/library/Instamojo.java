@@ -19,11 +19,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import instamojo.library.API.OrdernAuth;
+import instamojo.library.API.TxnVerify;
 
 public class Instamojo extends AppCompatActivity {
 
     String ordernauth_url,
-            amountstr, email, phone, name, description, purpose;
+            amountstr, email, phone, name, description, purpose, accessToken;
 
     ApplicationInfo app;
 
@@ -146,17 +147,17 @@ public class Instamojo extends AppCompatActivity {
             public void onResponse(String response) {
                 dismissDialogue();
                 JSONObject jsonObject = null;
-                String authToken = null, orderId = null, transactionId = null;
+                String orderId = null, transactionId = null;
                 try {
                     jsonObject = new JSONObject(response);
-                    authToken = jsonObject.getString("token");
+                    accessToken = jsonObject.getString("token");
                     JSONObject orderJson = jsonObject.getJSONObject("order");
                     orderId = orderJson.getString("order_id");
                     transactionId = jsonObject.getString("transaction_id");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                createOrder(authToken, orderId);
+                createOrder(accessToken, orderId);
             }
         });
         showDialogue("Fetching order details");
@@ -218,20 +219,46 @@ public class Instamojo extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Constants.REQUEST_CODE && data != null) {
-            String orderID = data.getStringExtra(Constants.ORDER_ID);
-            String transactionID = data.getStringExtra(Constants.TRANSACTION_ID);
-            String paymentID = data.getStringExtra(Constants.PAYMENT_ID);
+            final String orderID = data.getStringExtra(Constants.ORDER_ID);
+            final String transactionID = data.getStringExtra(Constants.TRANSACTION_ID);
+            final String paymentID = data.getStringExtra(Constants.PAYMENT_ID);
 
-            String status = "success";
+            TxnVerify verify = new TxnVerify();
 
-            String message = "status=" + status + ":orderId=" + orderID + ":txnId=" + transactionID + ":paymentId=" + paymentID;
+            Callback callback = new Callback() {
+                @Override
+                public void onResponse(String response) {
+                    dismissDialogue();
+                    JSONObject jsonresponse = null;
+                    try {
+                        jsonresponse = new JSONObject(response);
+                        if (jsonresponse.getBoolean("status")) {
+                            String status = "success";
+
+                            String message = "status=" + status + ":orderId=" + orderID + ":txnId=" + transactionID + ":paymentId=" + paymentID;
+
+                            fireBroadcast(Config.SUCCESS, message);
+                        }
+                        else {
+                            fireBroadcast(Config.FAILED, "Incorrect Payment Details");
+                        }
+                        endActivity();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
 
             if (orderID != null && transactionID != null && paymentID != null) {
-                fireBroadcast(Config.SUCCESS, message);
-            } else {
-                fireBroadcast(Config.FAILED, "Payment was cancelled");
+                showDialogue("Fetching Payment Status");
+                verify.get("https://api.instamojo.com/v2/payments/", accessToken, paymentID, callback);
             }
-            endActivity();
+            else {
+                fireBroadcast(Config.FAILED, "Payment was cancelled");
+                endActivity();
+            }
+
+
         }
     }
 
