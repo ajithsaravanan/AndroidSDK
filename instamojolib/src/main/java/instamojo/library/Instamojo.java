@@ -24,7 +24,7 @@ import instamojo.library.API.TxnVerify;
 public class Instamojo extends AppCompatActivity {
 
     String ordernauth_url,
-            amountstr, email, phone, name, description, purpose, accessToken;
+            amountstr, email, phone, name, description, purpose, accessToken, env;
 
     ApplicationInfo app;
 
@@ -86,10 +86,12 @@ public class Instamojo extends AppCompatActivity {
     private void checkEnvironment(String env) {
         if (TextUtils.equals(env, Config.TEST)) {
             com.instamojo.android.Instamojo.setBaseUrl("https://test.instamojo.com/");
+            this.env = env;
         }
 
         else if (TextUtils.equals(env, Config.PROD)) {
             com.instamojo.android.Instamojo.setBaseUrl("https://api.instamojo.com/");
+            this.env = env;
         }
 
         else {
@@ -251,7 +253,15 @@ public class Instamojo extends AppCompatActivity {
 
             if (orderID != null && transactionID != null && paymentID != null) {
                 showDialogue("Fetching Payment Status");
-                verify.get("https://api.instamojo.com/v2/payments/", accessToken, paymentID, callback);
+                String baseURL;
+                if (TextUtils.equals(env, Config.TEST)) {
+                    baseURL = "https://test.instamojo.com/";
+                }
+
+                else {
+                    baseURL = "https://api.instamojo.com/";
+                }
+                verify.get(baseURL + "v2/payments/", accessToken, paymentID, callback);
             }
             else {
                 fireBroadcast(Config.FAILED, "Payment was cancelled");
