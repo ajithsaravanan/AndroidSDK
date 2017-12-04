@@ -18,15 +18,15 @@ import com.instamojo.android.network.Request;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import instamojo.library.API.AccessToken;
 import instamojo.library.API.CreateOrder;
 import instamojo.library.API.CreateRequest;
-import instamojo.library.API.OrdernAuth;
 import instamojo.library.API.TxnVerify;
 
 public class Instamojo extends AppCompatActivity {
 
-    String ordernauth_url,
-            amountstr, email, phone, name, description, purpose, accessToken, env, base_URL, webhook;
+    String access_token_url,
+            amountstr, email, phone, name, description, purpose, env, base_URL, webhook, accessToken;
 
     ApplicationInfo app;
 
@@ -68,40 +68,65 @@ public class Instamojo extends AppCompatActivity {
 
         webhook = getIntent().getStringExtra("webhook");
 
-        accessToken = getIntent().getStringExtra("token");
-
-        String env = getIntent().getStringExtra("env");
-
-        ordernauth_url = bundle.getString(Config.ORDER_AUTHURL);
+        access_token_url = bundle.getString(Config.ORDER_AUTHURL);
 
 
         if (checkValidation()) {
-            checkEnvironment();
-            createPaymentRequest();
+            getAccessToken();
         }
 
         setContentView(R.layout.activity_instamojo);
     }
 
-    private void checkEnvironment() {
-        if (accessToken.startsWith("test_")) {
-            accessToken = accessToken.replace("test_", "");
+    private void setEnvironment(String env) {
+        if (TextUtils.equals(env, "test")) {
             com.instamojo.android.Instamojo.setBaseUrl("https://test.instamojo.com/");
             this.env = Config.TEST;
             Config.saveEnv(getApplicationContext(), Config.TEST);
             base_URL = "https://test.instamojo.com/";
         }
-        else {
+        else if (TextUtils.equals(env, "production")) {
             com.instamojo.android.Instamojo.setBaseUrl("https://api.instamojo.com/");
             this.env = Config.PROD;
             Config.saveEnv(getApplicationContext(), Config.PROD);
             base_URL = "https://api.instamojo.com/";
         }
+        else {
+            fireBroadcast(Config.FAILED, "Invalid Environment - check if your back end code points to the right environment");
+            endActivity();
+        }
+    }
+
+    private void getAccessToken() {
+        Callback callback = new Callback() {
+            @Override
+            public void onResponse(String response) {
+                dismissDialogue();
+                if (response.startsWith("test")) {
+                    setEnvironment(Config.TEST);
+                    accessToken = response.replace("test", "");
+                }
+                else if (response.startsWith("production")) {
+                    setEnvironment(Config.PROD);
+                    accessToken = response.replace("production", "");
+                }
+                else {
+                    fireBroadcast(Config.FAILED, "Invalid Access Token - check your back end code");
+                    endActivity();
+                }
+                createPaymentRequest();
+
+            }
+        };
+
+        AccessToken token = new AccessToken();
+        showDialogue("Getting access token");
+        token.get(access_token_url, callback);
     }
 
     private boolean checkValidation() {
-        if (TextUtils.isEmpty(ordernauth_url)) {
-            fireBroadcast(Config.FAILED, "Invalid Order URL");
+        if (TextUtils.isEmpty(access_token_url)) {
+            fireBroadcast(Config.FAILED, "Invalid Access Token URL");
             endActivity();
             return false;
         }
@@ -132,12 +157,6 @@ public class Instamojo extends AppCompatActivity {
 
         if (TextUtils.isEmpty(purpose)) {
             fireBroadcast(Config.FAILED, "Invalid Purpose");
-            endActivity();
-            return false;
-        }
-
-        if (TextUtils.isEmpty(accessToken)) {
-            fireBroadcast(Config.FAILED, "Invalid Token");
             endActivity();
             return false;
         }
@@ -183,29 +202,6 @@ public class Instamojo extends AppCompatActivity {
         };
         createOrder.post(base_URL + "v2/gateway/orders/payment-request/", accessToken, id, callback);
         showDialogue("Creating Order");
-    }
-
-    private void getOrdernAuth() {
-        OrdernAuth ordernAuth = new OrdernAuth();
-        ordernAuth.post(ordernauth_url, email, phone, name, amountstr, purpose, new Callback() {
-            @Override
-            public void onResponse(String response) {
-                dismissDialogue();
-                JSONObject jsonObject = null;
-                String orderId = null, transactionId = null;
-                try {
-                    jsonObject = new JSONObject(response);
-                    accessToken = jsonObject.getString("token");
-                    JSONObject orderJson = jsonObject.getJSONObject("order");
-                    orderId = orderJson.getString("order_id");
-                    transactionId = jsonObject.getString("transaction_id");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                createOrder(accessToken, orderId);
-            }
-        });
-        showDialogue("Fetching order details");
     }
 
     private void createOrder(String accessToken, String orderId) {
