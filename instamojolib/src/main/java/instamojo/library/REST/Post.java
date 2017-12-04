@@ -64,7 +64,7 @@ public class Post {
             requestJson.put("purpose", purpose);
             requestJson.put("send_email", "True");
             requestJson.put("send_sms", "True");
-            requestJson.put("'allow_repeated_payments'", "'False'");
+            requestJson.put("allow_repeated_payments", "False");
 
         } catch (JSONException e) {
             e.printStackTrace();

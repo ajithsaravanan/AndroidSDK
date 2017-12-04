@@ -11,7 +11,6 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import instamojo.library.Config;
 import instamojo.library.InstamojoPay;
 import instamojo.library.InstapayListener;
 
@@ -52,8 +51,6 @@ public class MainActivity extends AppCompatActivity {
             pay.put("purpose", purpose);
             pay.put("amount", amount);
             pay.put("name", buyername);
-            pay.put("token", "test_DWOtJ0aggz0XDJqBkd7sRVWtoCHEnw");
-            pay.put("env", Config.TEST);
         } catch (JSONException e) {
             e.printStackTrace();
         }

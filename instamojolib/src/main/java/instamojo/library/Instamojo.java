@@ -79,13 +79,13 @@ public class Instamojo extends AppCompatActivity {
     }
 
     private void setEnvironment(String env) {
-        if (TextUtils.equals(env, "test")) {
+        if (TextUtils.equals(env, Config.TEST)) {
             com.instamojo.android.Instamojo.setBaseUrl("https://test.instamojo.com/");
             this.env = Config.TEST;
             Config.saveEnv(getApplicationContext(), Config.TEST);
             base_URL = "https://test.instamojo.com/";
         }
-        else if (TextUtils.equals(env, "production")) {
+        else if (TextUtils.equals(env, Config.PROD)) {
             com.instamojo.android.Instamojo.setBaseUrl("https://api.instamojo.com/");
             this.env = Config.PROD;
             Config.saveEnv(getApplicationContext(), Config.PROD);
