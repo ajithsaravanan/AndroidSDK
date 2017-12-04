@@ -52,7 +52,8 @@ public class MainActivity extends AppCompatActivity {
             pay.put("purpose", purpose);
             pay.put("amount", amount);
             pay.put("name", buyername);
-            pay.put("env", Config.PROD);
+            pay.put("token", "test_DWOtJ0aggz0XDJqBkd7sRVWtoCHEnw");
+            pay.put("env", Config.TEST);
         } catch (JSONException e) {
             e.printStackTrace();
         }

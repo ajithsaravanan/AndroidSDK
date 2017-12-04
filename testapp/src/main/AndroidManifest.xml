@@ -26,7 +26,7 @@
         </activity>
 
         <meta-data android:name="instamojo.orderauth.url"
-                   android:value="https://frozen-reef-67391.herokuapp.com/peach_new.php"
+                   android:value="http://msgbhej.com/instamojo/new_transaction.php"
             />
 
     </application>

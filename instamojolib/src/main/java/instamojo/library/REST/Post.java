@@ -1,10 +1,14 @@
 package instamojo.library.REST;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -28,11 +32,51 @@ public class Post {
         return response.body().string();
     }
 
-    public String postTxnVerify(String url, String transactionID, String orderID, String paymentID) throws IOException {
-        Request request = new Request.Builder()
-                        .url(url + "?action=handle_redirect&txnId=" + transactionID + "&orderId=" + orderID + "&paymentId=" + paymentID)
-                        .build();
+    public String createOrder(String url, String accessToken, String id) throws IOException {
+        JSONObject requestJson = new JSONObject();
+        try {
+            requestJson.put("id", id);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
+        RequestBody requestBody = RequestBody.create(JSON, requestJson.toString());
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Authorization", "Bearer " + accessToken)
+                .build();
+        Response response = client.newCall(request).execute();
+        return response.body().string();
+    }
+
+    public String createRequest(String url, String redirectURL, String webhook, String accessToken, String name, String email, String phone, String purpose, String amount) throws IOException {
+        JSONObject requestJson = new JSONObject();
+        try {
+            requestJson.put("purpose", purpose);
+            requestJson.put("amount", amount);
+            requestJson.put("buyer_name", name);
+            requestJson.put("email", email);
+            requestJson.put("phone", phone);
+            requestJson.put("webhook", webhook);
+            requestJson.put("redirect_url", redirectURL);
+            requestJson.put("purpose", purpose);
+            requestJson.put("send_email", "True");
+            requestJson.put("send_sms", "True");
+            requestJson.put("'allow_repeated_payments'", "'False'");
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        RequestBody requestBody = RequestBody.create(JSON, requestJson.toString());
+
+        Request request = new Request.Builder()
+                              .url(url)
+                              .post(requestBody)
+                              .addHeader("Authorization", "Bearer " + accessToken)
+                              .build();
         Response response = client.newCall(request).execute();
         return response.body().string();
     }

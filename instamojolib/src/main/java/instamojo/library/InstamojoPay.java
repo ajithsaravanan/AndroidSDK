@@ -13,7 +13,7 @@ import org.json.JSONObject;
  */
 
 public class InstamojoPay extends BroadcastReceiver {
-    String amountstr, email, phone, name, description, purpose;
+    String amountstr, email, phone, name, description, purpose, token, webhook;
 
     JSONObject payment;
     Activity activity;
@@ -39,6 +39,12 @@ public class InstamojoPay extends BroadcastReceiver {
 
             name = payment.getString("name");
 
+            token = payment.getString("token");
+
+            if (payment.has("webhook")) {
+                webhook = payment.getString("webhook");
+            }
+
             String env = payment.getString("env");
 
             Intent intent = new Intent(activity, Instamojo.class);
@@ -47,6 +53,8 @@ public class InstamojoPay extends BroadcastReceiver {
             intent.putExtra("purpose", purpose);
             intent.putExtra("amount", amountstr);
             intent.putExtra("name", name);
+            intent.putExtra("token", token);
+            intent.putExtra("webhook", webhook);
             intent.putExtra("env", env);
 
             activity.startActivity(intent);
