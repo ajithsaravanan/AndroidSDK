@@ -111,7 +111,7 @@ public class Instamojo extends AppCompatActivity {
                     accessToken = response.replace("production", "");
                 }
                 else {
-                    fireBroadcast(Config.FAILED, "Invalid Access Token - check your back end code");
+                    fireBroadcast(Config.FAILED, "Pre-pend production or test to your access token!");
                     endActivity();
                 }
                 createPaymentRequest();
@@ -276,7 +276,7 @@ public class Instamojo extends AppCompatActivity {
                         if (jsonresponse.getBoolean("status")) {
                             String status = "success";
 
-                            String message = "status=" + status + ":orderId=" + orderID + ":txnId=" + transactionID + ":paymentId=" + paymentID;
+                            String message = "status=" + status + ":orderId=" + orderID + ":txnId=" + transactionID + ":paymentId=" + paymentID + ":token=" + accessToken;
 
                             fireBroadcast(Config.SUCCESS, message);
                         }
