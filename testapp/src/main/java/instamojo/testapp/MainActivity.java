@@ -51,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
             pay.put("purpose", purpose);
             pay.put("amount", amount);
             pay.put("name", buyername);
+            pay.put("send_sms", true);
+            pay.put("send_email", true);
         } catch (JSONException e) {
             e.printStackTrace();
         }

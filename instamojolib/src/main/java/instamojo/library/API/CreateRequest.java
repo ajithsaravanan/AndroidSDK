@@ -31,8 +31,8 @@ public class CreateRequest {
         }
     }
 
-    public void post(String url, String token, String amount, String email, String phone, String purpose, String buyer_name, String webhook, Callback callback) {
-        CreateRequestAsynch createRequestAsynch = new CreateRequestAsynch(url, token, amount, email, phone, purpose, buyer_name, webhook, callback);
+    public void post(String url, String token, String amount, String email, String phone, String purpose, String buyer_name, String webhook, boolean send_sms, boolean send_email, Callback callback) {
+        CreateRequestAsynch createRequestAsynch = new CreateRequestAsynch(url, token, amount, email, phone, purpose, buyer_name, webhook, send_sms, send_email, callback);
         createRequestAsynch.execute();
     }
 
@@ -41,7 +41,9 @@ public class CreateRequest {
 
         String url, amount, email, phone, purpose, buyer_name, webhook, token;
 
-        public CreateRequestAsynch (String url, String token, String amount, String email, String phone, String purpose, String buyer_name, String webhook, Callback callback) {
+        boolean send_sms, send_email;
+
+        public CreateRequestAsynch (String url, String token, String amount, String email, String phone, String purpose, String buyer_name, String webhook, boolean send_sms, boolean send_email, Callback callback) {
             this.url = url;
             this.amount = amount;
             this.email = email;
@@ -51,13 +53,15 @@ public class CreateRequest {
             this.webhook = webhook;
             this.callback = callback;
             this.token = token;
+            this.send_email = send_email;
+            this.send_sms = send_sms;
         }
 
         protected String doInBackground(Void... params) {
             Post post = new Post();
             String response = null;
             try {
-                response = post.createRequest(url, redirectUrl, webhook, token, buyer_name, email, phone, purpose, amount);
+                response = post.createRequest(url, redirectUrl, webhook, token, buyer_name, email, phone, purpose, amount, send_email, send_sms);
             } catch (IOException e) {
                 e.printStackTrace();
             }

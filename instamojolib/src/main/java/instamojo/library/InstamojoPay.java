@@ -14,7 +14,7 @@ import org.json.JSONObject;
 
 public class InstamojoPay extends BroadcastReceiver {
     String amountstr, email, phone, name, description, purpose, webhook;
-
+    boolean send_sms, send_email;
     JSONObject payment;
     Activity activity;
     InstapayListener listener;
@@ -39,17 +39,29 @@ public class InstamojoPay extends BroadcastReceiver {
 
             name = payment.getString("name");
 
+            Intent intent = new Intent(activity, Instamojo.class);
+
             if (payment.has("webhook")) {
                 webhook = payment.getString("webhook");
+                intent.putExtra("webhook", webhook);
             }
 
-            Intent intent = new Intent(activity, Instamojo.class);
+            if (payment.has("send_sms")) {
+                send_sms = payment.getBoolean("send_sms");
+                intent.putExtra("send_sms", send_sms);
+            }
+
+            if (payment.has("send_email")) {
+                send_email = payment.getBoolean("send_email");
+                intent.putExtra("send_email", send_email);
+            }
+
             intent.putExtra("email", email);
             intent.putExtra("phone", phone);
             intent.putExtra("purpose", purpose);
             intent.putExtra("amount", amountstr);
             intent.putExtra("name", name);
-            intent.putExtra("webhook", webhook);
+
 
             activity.startActivity(intent);
 

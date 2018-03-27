@@ -51,7 +51,7 @@ public class Post {
         return response.body().string();
     }
 
-    public String createRequest(String url, String redirectURL, String webhook, String accessToken, String name, String email, String phone, String purpose, String amount) throws IOException {
+    public String createRequest(String url, String redirectURL, String webhook, String accessToken, String name, String email, String phone, String purpose, String amount, boolean send_email, boolean send_sms) throws IOException {
         JSONObject requestJson = new JSONObject();
         try {
             requestJson.put("purpose", purpose);
@@ -62,8 +62,8 @@ public class Post {
             requestJson.put("webhook", webhook);
             requestJson.put("redirect_url", redirectURL);
             requestJson.put("purpose", purpose);
-            requestJson.put("send_email", "True");
-            requestJson.put("send_sms", "True");
+            requestJson.put("send_email", send_email);
+            requestJson.put("send_sms", send_sms);
             requestJson.put("allow_repeated_payments", "False");
 
         } catch (JSONException e) {

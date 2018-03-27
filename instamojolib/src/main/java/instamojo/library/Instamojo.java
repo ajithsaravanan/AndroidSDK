@@ -28,6 +28,8 @@ public class Instamojo extends AppCompatActivity {
     String access_token_url,
             amountstr, email, phone, name, description, purpose, env, base_URL, webhook, accessToken;
 
+    boolean send_sms = true, send_email = true;
+
     ApplicationInfo app;
 
     Bundle bundle;
@@ -67,6 +69,14 @@ public class Instamojo extends AppCompatActivity {
         description = getIntent().getStringExtra("description");
 
         webhook = getIntent().getStringExtra("webhook");
+
+        if (getIntent().hasExtra("send_sms")) {
+            send_sms = getIntent().getBooleanExtra("send_sms", true);
+        }
+
+        if (getIntent().hasExtra("send_email")) {
+            send_email = getIntent().getBooleanExtra("send_email", true);
+        }
 
         access_token_url = bundle.getString(Config.ORDER_AUTHURL);
 
