@@ -191,7 +191,7 @@ public class Instamojo extends AppCompatActivity {
 
             }
         };
-        createRequest.post(base_URL + "v2/payment_requests/", accessToken, amountstr, email, phone, purpose, name, webhook, callback);
+        createRequest.post(base_URL + "v2/payment_requests/", accessToken, amountstr, email, phone, purpose, name, webhook, send_sms, send_email, callback);
         showDialogue("Creating Payment Request");
     }
 
