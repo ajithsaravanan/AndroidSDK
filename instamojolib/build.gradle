@@ -64,7 +64,7 @@ buildscript {
 }
 
 group = 'ai.devsupport.instamojo'
-version = '0.1.0'
+version = '0.1.6'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -88,10 +88,10 @@ bintray {
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/shardullavekar/instamojodevsupport.git'
         version {
-            name = '0.1.0'
-            desc = 'AuthMe helps you replace passwords in your apps'
-            vcsTag = '0.1.0'
-            attributes = ['gradle-plugin': 'ai.devsupport:instamojo-sdk:0.1.0']
+            name = '0.1.6'
+            desc = 'Devsupport AI helps you integrate APIs quickly'
+            vcsTag = '0.1.6'
+            attributes = ['gradle-plugin': 'ai.devsupport:instamojo-sdk:0.1.6']
         }
     }
 }
